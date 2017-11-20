@@ -50,7 +50,7 @@ unsigned long sampletime_ms = 2000;//sampe 30s&nbsp;;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;
-String data = "";
+//String data = "";
 
 void setup() {
   Serial.begin(9600);
@@ -138,7 +138,8 @@ void loop() {
   {
     ratio = lowpulseoccupancy / (sampletime_ms * 10.0); // Integer percentage 0=&gt;100
 
-    d = 1.1 * pow(ratio, 3) - 3.8 * pow(ratio, 2) + 520 * ratio + 0.62; // using spec sheet curve
+    d = ((1.1*ratio - 3.8)*ratio + 520)*ratio + 0.62;
+    //d = 1.1 * pow(ratio, 3) - 3.8 * pow(ratio, 2) + 520 * ratio + 0.62; // using spec sheet curve
     //Serial.print("concentration = ");
 
     lowpulseoccupancy = 0;
@@ -150,7 +151,9 @@ void loop() {
   int sensorValue = analogRead(A0);
   double Rs = (1023.0 / sensorValue) - 1;
 
-  double ppm = pow(10.0, ((log10(Rs / R0) - 0.0827) / (-0.4807)));
+  //double ppm = pow(10.0, ((log10(Rs / R0) - 0.0827) / (-0.4807)));
+double ppm = 2500.33 * pow(Rs, -2.0803);
+  
   //Serial.print("HCHO ppm = ");
 
   //MultiChannel Gas
@@ -169,29 +172,29 @@ void loop() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
 
-  data = String("dust=") + d + "&rs=" + Rs + "&hcho=" + ppm + "&nh3=" + NH3 + "&co=" + CO + "&no2=" + NO2 + "&c3h8=" + C3H8 + "&c4h10=" + C4H10 + "&ch4=" + CH4 + "&h2=" + H2 + "&c2h5oh=" + C2H5OH + "&temp=" + t + "&hum=" + h + "&HATemp=" + HATemp2 + "&HAPres=" + HAPres2 + "&HAAlt=" + HAAlt2;
+  //data = String("dust=") + d + "&rs=" + Rs + "&hcho=" + ppm + "&nh3=" + NH3 + "&co=" + CO + "&no2=" + NO2 + "&c3h8=" + C3H8 + "&c4h10=" + C4H10 + "&ch4=" + CH4 + "&h2=" + H2 + "&c2h5oh=" + C2H5OH + "&temp=" + t + "&hum=" + h + "&HATemp=" + HATemp2 + "&HAPres=" + HAPres2 + "&HAAlt=" + HAAlt2;
 
   //Serial.println(data);
 
 
   if (client.connect(server, 80)) {
-    Serial.println(F("connected"));
+    //Serial.println(F("connected"));
     client.println(F("POST /air_add.php HTTP/1.1"));
     client.println(F("Host:  192.168.0.30"));
     client.println(F("User-Agent: Arduino/1.0"));
     client.println(F("Connection: close"));
     client.println(F("Content-Type: application/x-www-form-urlencoded;"));
     client.print(F("Content-Length: "));
-    client.println(data.length());
+    client.println(500);
     client.println();
-    client.println(data);
+    client.println(String("dust=") + d + "&rs=" + Rs + "&hcho=" + ppm + "&nh3=" + NH3 + "&co=" + CO + "&no2=" + NO2 + "&c3h8=" + C3H8 + "&c4h10=" + C4H10 + "&ch4=" + CH4 + "&h2=" + H2 + "&c2h5oh=" + C2H5OH + "&temp=" + t + "&hum=" + h + "&HATemp=" + HATemp2 + "&HAPres=" + HAPres2 + "&HAAlt=" + HAAlt2);
   }
   else
   {
     Serial.println(F("could not connect"));
   }
 
-  Serial.println(data);
+//  Serial.println(data);
 
   if (client.connected()) {
     client.stop();
